@@ -24,7 +24,6 @@
         .total-box { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; margin-top: 15px; }
         .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
         .counter-badge { background: var(--accent-blue); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
-        .semaforo-nada { color: #198754; } .semaforo-poco { color: #ffc107; } .semaforo-mucho { color: #dc3545; }
         .carbon-box { font-size: 0.9rem; color: #444; margin-top: 5px; font-weight: bold; background: #fff; padding: 5px; border-radius: 5px; display: inline-block; }
     </style>
 </head>
@@ -96,7 +95,7 @@
                     <span id="valTotal" class="h4 mb-0 text-primary">0.0 Kg</span>
                     <br>
                     <div class="carbon-box border shadow-sm mt-2">
-                        🪨 Carbón sugerido: <span id="carbonSug">0</span> kg
+                        🪨 Carbón sugerido: <span id="carbonSug">0.0</span> kg
                     </div>
                 </div>
 
@@ -129,7 +128,6 @@
     let listaActual = [];
     let miGrafico = null;
 
-    // Setear fecha de hoy por defecto
     document.getElementById('fechaAsado').valueAsDate = new Date();
 
     function checkUnidad() {
@@ -154,7 +152,6 @@
         document.getElementById('boxTotal').style.display = listaActual.length ? 'block' : 'none';
         document.getElementById('valTotal').innerText = kgTotal.toFixed(1) + ' Kg';
         
-        // Lógica de Carbón: Diferencia entre cortes rápidos y lentos
         let carbonTotal = 0;
         listaActual.forEach(i => {
             if(i.unidad === "Kg") {
@@ -178,16 +175,23 @@
         fetch(URL_SCRIPT).then(r => r.json()).then(data => {
             if (!data.length) return;
             const esteAnio = new Date().getFullYear();
-            document.getElementById('asadosAnio').innerText = data.filter(a => new Date(a.fecha).getFullYear() === esteAnio).length;
+            const asadosEsteAnio = data.filter(a => new Date(a.fecha).getFullYear() === esteAnio).length;
+            document.getElementById('asadosAnio').innerText = asadosEsteAnio;
 
             const conteo = {};
-            data.forEach(a => a.corte.split(", ").forEach(c => conteo[c] = (conteo[c] || 0) + 1));
+            data.forEach(a => {
+                if(a.corte) {
+                    a.corte.split(", ").forEach(c => conteo[c] = (conteo[c] || 0) + 1);
+                }
+            });
             const totalCortes = Object.values(conteo).reduce((a, b) => a + b, 0);
 
+            const ctx = document.getElementById('graficoCortes').getContext('2d');
             if (miGrafico) miGrafico.destroy();
-            Chart.register(ChartDataLabels);
-            miGrafico = new Chart(document.getElementById('graficoCortes'), {
+            
+            miGrafico = new Chart(ctx, {
                 type: 'pie',
+                plugins: [ChartDataLabels],
                 data: {
                     labels: Object.keys(conteo),
                     datasets: [{
@@ -211,13 +215,15 @@
             document.getElementById('tablaHistorial').innerHTML = `
                 <table class="table table-sm mt-2">
                     <thead class="table-light"><tr><th>Fecha</th><th>Kg</th><th>Adultos</th><th>Sobras</th></tr></thead>
-                    <tbody>${ultimos.map((a, idx) => {
-                        const equiv = (parseFloat(a.adultos)||0) + ((parseFloat(a.niños)||0)*0.5);
+                    <tbody>${ultimos.map(a => {
+                        const adultosNum = parseFloat(a.adultos) || 0;
+                        const niñosNum = parseFloat(a.niños) || 0;
+                        const equiv = adultosNum + (niñosNum * 0.5);
                         return `<tr>
                             <td>${new Date(a.fecha).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'})}</td>
-                            <td>${parseFloat(a.pesototal).toFixed(1)}</td>
+                            <td>${(parseFloat(a.pesototal) || 0).toFixed(1)}</td>
                             <td>${equiv.toFixed(1)}</td>
-                            <td><select class="form-select form-select-sm" onchange="alert('Guardado')">
+                            <td><select class="form-select form-select-sm" onchange="alert('Sobras actualizadas')">
                                 <option ${a.sobras==='Nada'?'selected':''}>Nada</option>
                                 <option ${a.sobras==='Poco'?'selected':''}>Poco</option>
                                 <option ${a.sobras==='Mucho'?'selected':''}>Mucho</option>
@@ -227,6 +233,9 @@
                 </table>`;
         });
     }
+
+    // ACTUALIZACIÓN AL CARGAR
+    window.onload = actualizarEstadisticas;
 
     document.getElementById('asadoForm').addEventListener('submit', function(e) {
         e.preventDefault();
