@@ -24,6 +24,12 @@
         .total-box { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; margin-top: 15px; }
         .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
         .counter-badge { background: var(--accent-blue); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        
+        /* Semáforos */
+        .semaforo-nada { color: #198754; font-weight: bold; } 
+        .semaforo-poco { color: #ffc107; font-weight: bold; } 
+        .semaforo-mucho { color: #dc3545; font-weight: bold; }
+        
         .carbon-box { font-size: 0.9rem; color: #444; margin-top: 5px; font-weight: bold; background: #fff; padding: 5px; border-radius: 5px; display: inline-block; }
     </style>
 </head>
@@ -55,12 +61,12 @@
                 </div>
                 <div class="row mb-4">
                     <div class="col">
-                        <label class="form-label fw-bold">Adultos</label>
-                        <input type="number" id="adultos" class="form-control" placeholder="Cant.">
+                        <label class="form-label fw-bold text-danger">Adultos *</label>
+                        <input type="number" id="adultos" class="form-control" placeholder="Obligatorio" required>
                     </div>
                     <div class="col">
                         <label class="form-label fw-bold">Niños</label>
-                        <input type="number" id="niños" class="form-control" placeholder="Cant.">
+                        <input type="number" id="niños" class="form-control" placeholder="Opcional">
                     </div>
                 </div>
 
@@ -115,7 +121,7 @@
                 </div>
                 <div class="col-md-12 text-center border-top pt-4">
                     <h6 class="fw-bold mb-3">Preferencia de Cortes (%)</h6>
-                    <div style="height: 280px; max-width: 450px; margin: auto;"><canvas id="graficoCortes"></canvas></div>
+                    <div style="height: 300px; max-width: 500px; margin: auto;"><canvas id="graficoCortes"></canvas></div>
                 </div>
             </div>
         </div>
@@ -175,15 +181,10 @@
         fetch(URL_SCRIPT).then(r => r.json()).then(data => {
             if (!data.length) return;
             const esteAnio = new Date().getFullYear();
-            const asadosEsteAnio = data.filter(a => new Date(a.fecha).getFullYear() === esteAnio).length;
-            document.getElementById('asadosAnio').innerText = asadosEsteAnio;
+            document.getElementById('asadosAnio').innerText = data.filter(a => new Date(a.fecha).getFullYear() === esteAnio).length;
 
             const conteo = {};
-            data.forEach(a => {
-                if(a.corte) {
-                    a.corte.split(", ").forEach(c => conteo[c] = (conteo[c] || 0) + 1);
-                }
-            });
+            data.forEach(a => { if(a.corte) a.corte.split(", ").forEach(c => conteo[c] = (conteo[c] || 0) + 1); });
             const totalCortes = Object.values(conteo).reduce((a, b) => a + b, 0);
 
             const ctx = document.getElementById('graficoCortes').getContext('2d');
@@ -196,7 +197,8 @@
                     labels: Object.keys(conteo),
                     datasets: [{
                         data: Object.values(conteo),
-                        backgroundColor: ['#003366', '#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d']
+                        // Paleta de colores contrastada
+                        backgroundColor: ['#003366', '#FF5733', '#28a745', '#FFC300', '#C70039', '#17a2b8', '#900C3F', '#581845', '#4A235A']
                     }]
                 },
                 options: {
@@ -216,40 +218,55 @@
                 <table class="table table-sm mt-2">
                     <thead class="table-light"><tr><th>Fecha</th><th>Kg</th><th>Adultos</th><th>Sobras</th></tr></thead>
                     <tbody>${ultimos.map(a => {
-                        const adultosNum = parseFloat(a.adultos) || 0;
-                        const niñosNum = parseFloat(a.niños) || 0;
-                        const equiv = adultosNum + (niñosNum * 0.5);
+                        const equiv = (parseFloat(a.adultos) || 0) + ((parseFloat(a.niños) || 0) * 0.5);
+                        const semClase = a.sobras === 'Mucho' ? 'semaforo-mucho' : a.sobras === 'Poco' ? 'semaforo-poco' : 'semaforo-nada';
                         return `<tr>
                             <td>${new Date(a.fecha).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'})}</td>
                             <td>${(parseFloat(a.pesototal) || 0).toFixed(1)}</td>
                             <td>${equiv.toFixed(1)}</td>
-                            <td><select class="form-select form-select-sm" onchange="alert('Sobras actualizadas')">
-                                <option ${a.sobras==='Nada'?'selected':''}>Nada</option>
-                                <option ${a.sobras==='Poco'?'selected':''}>Poco</option>
-                                <option ${a.sobras==='Mucho'?'selected':''}>Mucho</option>
-                            </select></td>
+                            <td><span class="${semClase}">${a.sobras || 'Nada'}</span></td>
                         </tr>`;
                     }).join('')}</tbody>
                 </table>`;
         });
     }
 
-    // ACTUALIZACIÓN AL CARGAR
     window.onload = actualizarEstadisticas;
 
     document.getElementById('asadoForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        
+        // El navegador ya valida el "required" de Adultos, pero reforzamos aquí
+        if (!document.getElementById('adultos').value) {
+            alert("El campo de Adultos es obligatorio.");
+            return;
+        }
+
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerText = 'Enviando...';
+
         const data = {
             fecha: document.getElementById('fechaAsado').value,
-            adultos: document.getElementById('adultos').value || 0,
+            adultos: document.getElementById('adultos').value,
             niños: document.getElementById('niños').value || 0,
             corte: listaActual.map(i => i.nombre).join(", "),
             pesoPorCorte: listaActual.map(i => i.cantidad.toFixed(1) + i.unidad).join(", "),
             pesoTotal: listaActual.reduce((acc, i) => i.unidad === "Kg" ? acc + i.cantidad : acc, 0),
-            sobras: "Pendiente",
+            sobras: "Nada",
             notas: document.getElementById('notas').value
         };
-        fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }).then(() => location.reload());
+
+        fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) })
+        .then(() => { 
+            alert('¡Asado cargado con éxito en la planilla, Martín! 🔥'); 
+            location.reload(); 
+        })
+        .catch(() => {
+            alert('Hubo un error al cargar. Intentá de nuevo.');
+            btn.disabled = false;
+            btn.innerText = 'REGISTRAR ASADO';
+        });
     });
 </script>
 </body>
