@@ -3,27 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asado Tracker Elite - Martín</title>
+    <title>Asado Tracker Elite</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AsadoTracker">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/emoji/160/fire.png">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --main-blue: #003366; --accent-blue: #007bff; }
         body { background-color: #f4f7f6; padding: 20px; font-family: 'Segoe UI', sans-serif; }
-        .card-main { max-width: 800px; margin: auto; border-radius: 15px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); background: white; overflow: hidden; }
+        .card-main { max-width: 850px; margin: auto; border-radius: 15px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); background: white; overflow: hidden; }
+        .header-asado { background: var(--main-blue); color: white; padding: 20px; text-align: center; }
         .nav-tabs { background: #e9ecef; border: none; }
         .nav-link { color: #666; font-weight: bold; border: none !important; padding: 15px; }
         .nav-link.active { color: var(--main-blue) !important; background: white !important; }
-        .header-asado { background: var(--main-blue); color: white; padding: 20px; text-align: center; }
-        .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 10px; margin-bottom: 8px; }
         .total-box { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; margin-top: 15px; }
-        .chart-container { position: relative; height: 300px; width: 100%; }
+        .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
+        .counter-badge { background: var(--accent-blue); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card-main">
     <div class="header-asado">
-        <h2 class="mb-0">🥩 Asado Tracker Elite</h2>
+        <h2 class="mb-0">🔥 Asado Tracker Elite</h2>
+        <div class="mt-2 text-white-50 small">Asados en 2026: <span id="asadosAnio" class="counter-badge text-white">0</span></div>
     </div>
 
     <ul class="nav nav-tabs nav-fill" id="asadoTabs">
@@ -50,7 +57,7 @@
                 </div>
 
                 <div class="p-3 border rounded-3 bg-light mb-3">
-                    <label class="form-label fw-bold">Agregar Corte</label>
+                    <label class="form-label fw-bold text-primary">Agregar Corte</label>
                     <div class="input-group">
                         <select id="selectCorte" class="form-select" onchange="checkUnidad()">
                             <option value="">-- Seleccionar --</option>
@@ -76,7 +83,7 @@
                 <div id="listaCortesUI"></div>
 
                 <div id="boxTotal" class="total-box mb-4" style="display:none;">
-                    <span class="text-muted fw-bold">PESO TOTAL DE CARNE: </span>
+                    <span class="text-muted fw-bold">PESO TOTAL CARNE: </span>
                     <span id="valTotal" class="h4 mb-0 text-primary">0.0 Kg</span>
                 </div>
 
@@ -91,7 +98,7 @@
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-bold">Notas</label>
-                        <textarea id="notas" class="form-control" rows="1"></textarea>
+                        <textarea id="notas" class="form-control" rows="1" placeholder="Ej: Invitados: Flor, Pili, Tomy, Bauti..."></textarea>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary w-100 btn-lg shadow mt-3">REGISTRAR ASADO</button>
@@ -99,16 +106,14 @@
         </div>
 
         <div class="tab-pane fade" id="historial">
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <h5 class="fw-bold">Distribución de Cortes</h5>
-                    <div class="chart-container">
-                        <canvas id="graficoCortes"></canvas>
-                    </div>
+            <div class="row">
+                <div class="col-md-5 mb-4 text-center">
+                    <h6 class="fw-bold mb-3">Cortes Preferidos (%)</h6>
+                    <div style="height: 250px;"><canvas id="graficoCortes"></canvas></div>
                 </div>
-                <div class="col-md-6 text-center">
-                    <h5 class="fw-bold">Resumen del Historial</h5>
-                    <div id="tablaHistorial" class="small">Cargando datos...</div>
+                <div class="col-md-7">
+                    <h6 class="fw-bold mb-3">Últimos Registros</h6>
+                    <div id="tablaHistorial" class="table-responsive small">Cargando...</div>
                 </div>
             </div>
         </div>
@@ -131,7 +136,6 @@
         const n = document.getElementById('selectCorte').value;
         const q = parseFloat(document.getElementById('inputCant').value);
         const u = document.getElementById('labelUnidad').innerText;
-
         if (n && q > 0) {
             listaActual.push({ nombre: n, cantidad: q, unidad: u });
             renderizar();
@@ -141,69 +145,65 @@
     }
 
     function renderizar() {
-        const ui = document.getElementById('listaCortesUI');
-        const box = document.getElementById('boxTotal');
         const kgTotal = listaActual.reduce((acc, i) => i.unidad === "Kg" ? acc + i.cantidad : acc, 0);
-
-        box.style.display = listaActual.length > 0 ? 'block' : 'none';
+        document.getElementById('boxTotal').style.display = listaActual.length ? 'block' : 'none';
         document.getElementById('valTotal').innerText = kgTotal.toFixed(2) + ' Kg';
-
-        ui.innerHTML = listaActual.map((i, idx) => `
+        document.getElementById('listaCortesUI').innerHTML = listaActual.map((i, idx) => `
             <div class="corte-item shadow-sm">
                 <span><strong>${i.nombre}</strong></span>
                 <div>
                     <span class="badge bg-primary me-2">${i.cantidad} ${i.unidad}</span>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="quitar(${idx})">✕</button>
+                    <button type="button" onclick="quitar(${idx})" class="btn btn-sm btn-outline-danger">✕</button>
                 </div>
-            </div>
-        `).join('');
+            </div>`).join('');
     }
 
-    function quitar(idx) {
-        listaActual.splice(idx, 1);
-        renderizar();
-    }
+    function quitar(idx) { listaActual.splice(idx, 1); renderizar(); }
 
     function actualizarEstadisticas() {
         fetch(URL_SCRIPT).then(r => r.json()).then(data => {
             if (!data.length) return;
-            
-            // Gráfico
+            const esteAnio = new Date().getFullYear();
+            const totalAnio = data.filter(a => new Date(a.fecha).getFullYear() === esteAnio).length;
+            document.getElementById('asadosAnio').innerText = totalAnio;
+
             const conteo = {};
-            data.forEach(asado => {
-                const cortesArr = asado.corte.split(", ");
-                cortesArr.forEach(c => conteo[c] = (conteo[c] || 0) + 1);
-            });
+            data.forEach(a => a.corte.split(", ").forEach(c => conteo[c] = (conteo[c] || 0) + 1));
+            const totalItems = Object.values(conteo).reduce((acc, val) => acc + val, 0);
 
             const ctx = document.getElementById('graficoCortes').getContext('2d');
             if (miGrafico) miGrafico.destroy();
             miGrafico = new Chart(ctx, {
-                type: 'pie',
+                type: 'doughnut',
                 data: {
                     labels: Object.keys(conteo),
                     datasets: [{
                         data: Object.values(conteo),
-                        backgroundColor: ['#003366', '#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1']
+                        backgroundColor: ['#003366', '#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8']
                     }]
+                },
+                options: {
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                        tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${((ctx.raw/totalItems)*100).toFixed(1)}%` } }
+                    }
                 }
             });
 
-            // Tabla
             const ultimos = data.reverse().slice(0, 5);
             document.getElementById('tablaHistorial').innerHTML = `
-                <table class="table table-sm mt-3">
-                    <thead><tr><th>Fecha</th><th>Total</th></tr></thead>
-                    <tbody>${ultimos.map(a => `<tr><td>${new Date(a.fecha).toLocaleDateString()}</td><td>${a.pesototal}kg</td></tr>`).join('')}</tbody>
+                <table class="table table-sm mt-2">
+                    <thead class="table-light"><tr><th>Fecha</th><th>Kg</th><th>Equiv.</th></tr></thead>
+                    <tbody>${ultimos.map(a => {
+                        const equiv = parseFloat(a.adultos) + (parseFloat(a.niños) * 0.5);
+                        return `<tr><td>${new Date(a.fecha).toLocaleDateString()}</td><td>${a.pesototal}kg</td><td>${equiv}</td></tr>`;
+                    }).join('')}</tbody>
                 </table>`;
         });
     }
 
     document.getElementById('asadoForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        if (!listaActual.length) return;
-        const btn = e.target.querySelector('button[type="submit"]');
-        btn.disabled = true;
-
         const data = {
             adultos: document.getElementById('adultos').value,
             niños: document.getElementById('niños').value,
@@ -213,9 +213,7 @@
             sobras: document.getElementById('sobras').value,
             notas: document.getElementById('notas').value
         };
-
-        fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) })
-        .then(() => { alert('¡Asado registrado!'); location.reload(); });
+        fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }).then(() => location.reload());
     });
 </script>
 </body>
