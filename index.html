@@ -1,214 +1,49 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asado Tracker Pro - Martín</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        :root { --main-blue: #003366; --accent-blue: #007bff; }
-        body { background-color: #f0f2f5; padding: 20px; font-family: 'Segoe UI', sans-serif; }
-        .card-main { max-width: 800px; margin: auto; border-radius: 15px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); background: white; }
-        .nav-tabs { border: none; background: #e9ecef; border-radius: 15px 15px 0 0; }
-        .nav-link { color: #666; font-weight: bold; border: none !important; padding: 15px 25px; }
-        .nav-link.active { color: var(--main-blue) !important; background: white !important; border-radius: 15px 15px 0 0; }
-        .header-asado { background: var(--main-blue); color: white; padding: 20px; text-align: center; }
-        .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 10px; margin-bottom: 8px; }
-        .total-container { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; margin-top: 10px; }
-        .stat-card { background: var(--main-blue); color: white; padding: 15px; border-radius: 10px; text-align: center; }
-    </style>
-</head>
-<body>
+// Esta función se activa al cambiar de pestaña
+document.getElementById('historial-tab').addEventListener('click', function() {
+    const historialDiv = document.getElementById('resumenHoy');
+    historialDiv.innerHTML = '<div class="text-center p-4">⌛ Cargando historial desde Google Sheets...</div>';
 
-<div class="card-main">
-    <div class="header-asado">
-        <h2 class="mb-0">🥩 Asado Tracker Elite</h2>
-    </div>
-
-    <ul class="nav nav-tabs nav-fill" id="asadoTabs" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active" id="carga-tab" data-bs-toggle="tab" data-bs-target="#carga" type="button">NUEVO ASADO</button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button">DATOS E HISTORIAL</button>
-        </li>
-    </ul>
-
-    <div class="tab-content p-4">
-        <div class="tab-pane fade show active" id="carga">
-            <form id="asadoForm">
-                <div class="row mb-4">
-                    <div class="col">
-                        <label class="form-label fw-bold">Adultos</label>
-                        <input type="number" id="adultos" class="form-control" oninput="generarReporte()" placeholder="Cant.">
-                    </div>
-                    <div class="col">
-                        <label class="form-label fw-bold">Niños</label>
-                        <input type="number" id="niños" class="form-control" oninput="generarReporte()" placeholder="Cant.">
-                    </div>
-                </div>
-
-                <div class="p-3 border rounded-3 bg-light mb-3">
-                    <label class="form-label fw-bold">Agregar Corte</label>
-                    <div class="input-group">
-                        <select id="selectCorte" class="form-select">
-                            <option value="">-- Seleccionar --</option>
-                            <option value="Vacío">Vacío</option>
-                            <option value="Tira de Asado">Tira de Asado</option>
-                            <option value="Entraña">Entraña</option>
-                            <option value="Matambre">Matambre</option>
-                            <option value="Picaña">Picaña</option>
-                            <option value="Ojo de Bife">Ojo de Bife</option>
-                            <option value="Lomo">Lomo</option>
-                            <option value="Colita de Cuadril">Colita de Cuadril</option>
-                            <option value="Chorizo">Chorizo</option>
-                            <option value="Morcilla">Morcilla</option>
-                            <option value="Molleja">Molleja</option>
-                            <option value="Provoleta">Provoleta</option>
-                        </select>
-                        <input type="number" step="0.1" id="inputPeso" class="form-control" placeholder="Kg" style="max-width: 90px;">
-                        <button type="button" onclick="agregarCorte()" class="btn btn-success">＋</button>
-                    </div>
-                </div>
-
-                <div id="listaCortes" class="mb-3"></div>
-
-                <div id="totalContainer" class="total-container mb-4" style="display:none;">
-                    <span class="text-muted fw-bold">PESO TOTAL: </span>
-                    <span id="displayTotal" class="h4 mb-0 text-primary">0.0 Kg</span>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label class="form-label fw-bold">Sobras</label>
-                        <select id="sobras" class="form-select">
-                            <option value="Nada">Nada</option>
-                            <option value="Poco">Poco</option>
-                            <option value="Mucho">Mucho</option>
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label fw-bold">Notas</label>
-                        <textarea id="notas" class="form-control" rows="1"></textarea>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100 btn-lg shadow mt-3">REGISTRAR ASADO</button>
-            </form>
-        </div>
-
-        <div class="tab-pane fade" id="historial">
-            <div class="row g-3 mb-4">
-                <div class="col-6">
-                    <div class="stat-card">
-                        <small>Kg por Persona</small>
-                        <h3 id="reporteRatio" class="mb-0">-</h3>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="stat-card" style="background: #28a745;">
-                        <small>Corte más pedido</small>
-                        <h4 id="topCorte" class="mb-0">-</h4>
-                    </div>
-                </div>
-            </div>
-            
-            <h5 class="fw-bold mb-3 border-bottom pb-2">Resumen de Hoy</h5>
-            <div id="resumenHoy" class="p-3 bg-light rounded text-center text-muted">
-                Completá los datos en la pestaña anterior.
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbw6z7SLrURmQqq7ZjxbKAnKIIhaEqhZ3T94DWyISv4CyRt6JYzRiaD4a6T47LMKau0z/exec';
-    let items = [];
-
-    function agregarCorte() {
-        const nombre = document.getElementById('selectCorte').value;
-        const peso = parseFloat(document.getElementById('inputPeso').value);
-
-        if (nombre && peso > 0) {
-            items.push({ nombre, peso });
-            actualizarUI();
-            document.getElementById('selectCorte').value = "";
-            document.getElementById('inputPeso').value = "";
+    fetch(URL_SCRIPT) // Al ser un GET, trae los datos
+    .then(response => response.json())
+    .then(data => {
+        if (data.length === 0) {
+            historialDiv.innerHTML = "Aún no hay asados registrados.";
+            return;
         }
-    }
 
-    function actualizarUI() {
-        const lista = document.getElementById('listaCortes');
-        const totalContainer = document.getElementById('totalContainer');
-        const total = items.reduce((acc, curr) => acc + curr.peso, 0);
+        // Invertimos para ver el más reciente primero
+        const ultimosAsados = data.reverse().slice(0, 5); 
         
-        totalContainer.style.display = items.length > 0 ? 'block' : 'none';
-        document.getElementById('displayTotal').innerText = total.toFixed(2) + ' Kg';
-
-        lista.innerHTML = items.map((item, idx) => `
-            <div class="corte-item shadow-sm">
-                <span><strong>${item.nombre}</strong></span>
-                <div>
-                    <span class="badge bg-primary me-2">${item.peso} Kg</span>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarCorte(${idx})">✕</button>
-                </div>
+        let tablaHtml = `
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mt-3">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cortes</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${ultimosAsados.map(a => `
+                            <tr>
+                                <td>${new Date(a.fecha).toLocaleDateString()}</td>
+                                <td class="small">${a.corte}</td>
+                                <td><strong>${a.pesototal}kg</strong></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             </div>
-        `).join('');
+            <p class="small text-muted text-center mt-2">Mostrando los últimos 5 asados.</p>
+        `;
+        historialDiv.innerHTML = tablaHtml;
 
-        generarReporte();
-    }
-
-    function generarReporte() {
-        const adultos = parseInt(document.getElementById('adultos').value) || 0;
-        const niños = parseInt(document.getElementById('niños').value) || 0;
-        const totalPeso = items.reduce((acc, curr) => acc + curr.peso, 0);
-        const personasEquiv = adultos + (niños * 0.5);
-
-        if (personasEquiv > 0) {
-            const ratio = (totalPeso / personasEquiv).toFixed(3);
-            document.getElementById('reporteRatio').innerText = ratio + ' Kg';
-            document.getElementById('resumenHoy').innerHTML = `
-                📌 <strong>Análisis:</strong> Con ${adultos} adultos y ${niños} niños, 
-                estás comprando <strong>${ratio} Kg</strong> por persona.
-            `;
-        }
-        
-        // Simulación de "Top Corte" basada en la carga actual
-        if(items.length > 0) {
-            document.getElementById('topCorte').innerText = items[0].nombre;
-        }
-    }
-
-    function eliminarCorte(idx) {
-        items.splice(idx, 1);
-        actualizarUI();
-    }
-
-    document.getElementById('asadoForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (items.length === 0) return alert("Agregá cortes primero.");
-
-        const btn = e.target.querySelector('button');
-        btn.disabled = true;
-        btn.innerText = 'Guardando...';
-
-        const data = {
-            adultos: document.getElementById('adultos').value,
-            niños: document.getElementById('niños').value,
-            corte: items.map(i => i.nombre).join(", "),
-            pesoPorCorte: items.map(i => i.peso + "kg").join(", "),
-            pesoTotal: items.reduce((acc, curr) => acc + curr.peso, 0),
-            sobras: document.getElementById('sobras').value,
-            notas: document.getElementById('notas').value
-        };
-
-        fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) })
-        .then(() => {
-            alert('¡Guardado con éxito!');
-            location.reload();
-        });
+        // Actualizar estadísticas globales (opcional)
+        document.getElementById('reporteRatio').innerText = data[0].pesototal + ' Kg'; 
+    })
+    .catch(err => {
+        historialDiv.innerHTML = "Error al cargar datos. ¿Publicaste el script como 'Cualquiera'?";
+        console.error(err);
     });
-</script>
-</body>
-</html>
+});
