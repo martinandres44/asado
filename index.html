@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asados Tracker</title>
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://img.icons8.com/emoji/160/fire.png">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -15,14 +17,14 @@
         body { background-color: #f4f7f6; padding: 20px; font-family: 'Segoe UI', sans-serif; }
         .card-main { max-width: 850px; margin: auto; border-radius: 15px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
         .header-asado { background: var(--main-blue); color: white; padding: 20px; text-align: center; }
-        .nav-link { color: #666; font-weight: bold; padding: 15px; }
+        .nav-link { color: #666; font-weight: bold; padding: 15px; border: none !important; }
         .nav-link.active { color: var(--main-blue) !important; background: white !important; }
         .total-box { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; }
         .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
         .semaforo-nada { color: #198754; font-weight: bold; } 
         .semaforo-poco { color: #ffc107; font-weight: bold; } 
         .semaforo-mucho { color: #dc3545; font-weight: bold; }
-        .carbon-box { font-size: 0.9rem; color: #444; margin-top: 5px; font-weight: bold; background: #fff; padding: 5px; border-radius: 5px; display: inline-block; }
+        .counter-badge { background: var(--accent-blue); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -30,12 +32,16 @@
 <div class="card-main">
     <div class="header-asado">
         <h2 class="mb-0">🔥 Asados Tracker</h2>
-        <div class="mt-2 text-white-50 small">Asados en 2026: <span id="asadosAnio">0</span></div>
+        <div class="mt-2 text-white-50 small">Asados en 2026: <span id="asadosAnio" class="counter-badge text-white">0</span></div>
     </div>
 
     <ul class="nav nav-tabs nav-fill" id="asadoTabs">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#carga">NUEVO ASADO</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#historial" onclick="actualizarEstadisticas()">HISTORIAL</button></li>
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#carga">NUEVO ASADO</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="btn-historial" data-bs-toggle="tab" data-bs-target="#historial">HISTORIAL Y SOBRAS</button>
+        </li>
     </ul>
 
     <div class="tab-content p-4">
@@ -65,7 +71,7 @@
                     </div>
                     <div class="input-group">
                         <span class="input-group-text">$</span>
-                        <input type="number" id="inputPrecio" class="form-control" placeholder="Precio x Kg/Unid">
+                        <input type="number" id="inputPrecio" class="form-control" placeholder="Precio">
                         <button type="button" onclick="sumarCorte()" class="btn btn-success">＋</button>
                     </div>
                 </div>
@@ -77,12 +83,9 @@
                         <div class="col"><b>PESO TOTAL:</b> <br><span id="valTotal">0.0 Kg</span></div>
                         <div class="col"><b>GASTO TOTAL:</b> <br><span id="gastoTotal" class="text-success">$0.0</span></div>
                     </div>
-                    <div class="carbon-box border shadow-sm mt-2">
-                        🪨 Carbón sugerido: <span id="carbonSug">0.0</span> kg
-                    </div>
                 </div>
 
-                <textarea id="notas" class="form-control mb-3" placeholder="Notas..."></textarea>
+                <textarea id="notas" class="form-control mb-3" placeholder="Notas (Ej: Invitados: Flor, Tomy...)"></textarea>
                 <button type="submit" class="btn btn-primary w-100 btn-lg shadow">REGISTRAR ASADO</button>
             </form>
         </div>
@@ -94,6 +97,7 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const URL_SCRIPT = 'TU_URL_DE_APPS_SCRIPT_AQUI'; 
     let listaActual = [];
@@ -111,12 +115,7 @@
         const q = parseFloat(document.getElementById('inputCant').value);
         const p = parseFloat(document.getElementById('inputPrecio').value) || 0;
         if (n && q > 0) {
-            listaActual.push({ 
-                nombre: n, 
-                cantidad: q, 
-                unidad: document.getElementById('labelUnidad').innerText, 
-                precio: p 
-            });
+            listaActual.push({ nombre: n, cantidad: q, unidad: document.getElementById('labelUnidad').innerText, precio: p });
             renderizar();
             document.getElementById('selectCorte').value = "";
             document.getElementById('inputCant').value = "";
@@ -127,21 +126,9 @@
     function renderizar() {
         const kgTotal = listaActual.reduce((acc, i) => i.unidad === "Kg" ? acc + i.cantidad : acc, 0);
         const costoTotal = listaActual.reduce((acc, i) => acc + (i.cantidad * i.precio), 0);
-        
         document.getElementById('boxTotal').style.display = listaActual.length ? 'block' : 'none';
         document.getElementById('valTotal').innerText = kgTotal.toFixed(1) + ' Kg';
         document.getElementById('gastoTotal').innerText = '$' + costoTotal.toFixed(1);
-
-        // Cálculo de carbón diferenciado
-        let carbonTotal = 0;
-        listaActual.forEach(i => {
-            if(i.unidad === "Kg") {
-                const rapido = ["Entraña", "Molleja"].includes(i.nombre);
-                carbonTotal += rapido ? (i.cantidad * 1.0) : (i.cantidad * 1.8);
-            }
-        });
-        document.getElementById('carbonSug').innerText = carbonTotal.toFixed(1);
-
         document.getElementById('listaCortesUI').innerHTML = listaActual.map((i, idx) => `
             <div class="corte-item shadow-sm">
                 <span><b>${i.nombre}</b> ($${(i.cantidad * i.precio).toFixed(1)})</span>
@@ -150,14 +137,24 @@
             </div>`).join('');
     }
 
+    // FUNCIÓN CORREGIDA DE CARGA
     function actualizarEstadisticas() {
-        fetch(URL_SCRIPT).then(r => r.json()).then(data => {
-            if (!data.length) return;
+        const tabla = document.getElementById('tablaHistorial');
+        tabla.innerHTML = "⌛ Cargando datos desde la planilla...";
+
+        fetch(URL_SCRIPT)
+        .then(r => r.json())
+        .then(data => {
+            if (!data || data.length === 0) {
+                tabla.innerHTML = "No se encontraron registros.";
+                return;
+            }
+
             const esteAnio = new Date().getFullYear();
             document.getElementById('asadosAnio').innerText = data.filter(a => new Date(a.fecha).getFullYear() === esteAnio).length;
             
             const ultimos = data.reverse().slice(0, 8);
-            document.getElementById('tablaHistorial').innerHTML = `
+            tabla.innerHTML = `
                 <table class="table table-sm">
                     <thead class="table-light"><tr><th>Fecha</th><th>Kg</th><th>$ Total</th><th>Sobras</th></tr></thead>
                     <tbody>${ultimos.map(a => {
@@ -166,13 +163,39 @@
                             <td>${new Date(a.fecha).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'})}</td>
                             <td>${(parseFloat(a.pesototal) || 0).toFixed(1)}</td>
                             <td>$${(parseFloat(a.gastototal) || 0).toFixed(1)}</td>
-                            <td><span class="${semClase}">${a.sobras || 'Nada'}</span></td>
+                            <td><span class="${semClase}">${a.sobras || 'Pendiente'}</span></td>
                         </tr>`;
                     }).join('')}</tbody>
                 </table>`;
+
+            // Gráfico
+            const conteo = {};
+            data.forEach(a => { if(a.corte) a.corte.split(", ").forEach(c => conteo[c] = (conteo[c] || 0) + 1); });
+            const totalCortes = Object.values(conteo).reduce((a, b) => a + b, 0);
+            if (miGrafico) miGrafico.destroy();
+            miGrafico = new Chart(document.getElementById('graficoCortes'), {
+                type: 'pie',
+                plugins: [ChartDataLabels],
+                data: {
+                    labels: Object.keys(conteo),
+                    datasets: [{ data: Object.values(conteo), backgroundColor: ['#003366', '#FF5733', '#28a745', '#FFC300', '#C70039', '#17a2b8'] }]
+                },
+                options: {
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                        datalabels: { color: '#fff', formatter: (val) => ((val/totalCortes)*100).toFixed(0) + '%' }
+                    }
+                }
+            });
+        })
+        .catch(err => {
+            tabla.innerHTML = "Error al conectar. Revisá la URL del Script.";
+            console.error(err);
         });
     }
 
+    // Vincular evento al botón de Historial
+    document.getElementById('btn-historial').addEventListener('click', actualizarEstadisticas);
     window.onload = actualizarEstadisticas;
 
     document.getElementById('asadoForm').addEventListener('submit', function(e) {
@@ -189,7 +212,7 @@
             notas: document.getElementById('notas').value
         };
         fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }).then(() => {
-            alert('¡Asado registrado con éxito!');
+            alert('¡Asado registrado!');
             location.reload();
         });
     });
