@@ -23,9 +23,15 @@
         .nav-link.active { color: var(--main-blue) !important; background: white !important; }
         .total-box { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; }
         .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
+        
+        /* SEMÁFORO CORREGIDO */
         .semaforo-nada { color: #198754 !important; font-weight: bold; } 
         .semaforo-poco { color: #ffc107 !important; font-weight: bold; } 
         .semaforo-mucho { color: #dc3545 !important; font-weight: bold; }
+        
+        /* TABLA MÁS GRANDE */
+        .table-historial { font-size: 1.1rem !important; }
+        .table-historial td, .table-historial th { padding: 12px 8px !important; }
     </style>
 </head>
 <body>
@@ -38,7 +44,7 @@
 
     <ul class="nav nav-tabs nav-fill" id="asadoTabs">
         <li class="nav-item"><button class="nav-link active" id="tab-carga-btn" data-bs-toggle="tab" data-bs-target="#carga">REGISTRO</button></li>
-        <li class="nav-item"><button class="nav-link" id="btn-historial" data-bs-toggle="tab" data-bs-target="#historial">HISTORIAL Y SOBRAS</button></li>
+        <li class="nav-item"><button class="nav-link" id="btn-historial" data-bs-toggle="tab" data-bs-target="#historial">HISTORIAL</button></li>
     </ul>
 
     <div class="tab-content p-4">
@@ -77,7 +83,7 @@
 
                 <div id="boxTotal" class="total-box mb-3" style="display:none;">
                     <div class="row">
-                        <div class="col"><b>PESO:</b> <br><span id="valTotal">0.0 Kg</span></div>
+                        <div class="col"><b>PESO TOTAL:</b> <br><span id="valTotal">0.0 Kg</span></div>
                         <div class="col"><b>GASTO TOTAL:</b> <br><span id="gastoTotal" class="text-success">$0.0</span></div>
                     </div>
                 </div>
@@ -90,7 +96,7 @@
 
         <div class="tab-pane fade" id="historial">
             <h6 class="fw-bold mb-3">Últimos Registros</h6>
-            <div id="tablaHistorial" class="table-responsive small">Cargando...</div>
+            <div id="tablaHistorial" class="table-responsive">Cargando...</div>
             <div class="text-center mt-4 pt-4 border-top" style="max-width: 500px; margin: auto;">
                 <h6 class="fw-bold mb-3">Preferencia de Cortes (%)</h6>
                 <canvas id="graficoCortes"></canvas>
@@ -144,26 +150,22 @@
             const esteAnio = new Date().getFullYear();
             document.getElementById('asadosAnio').innerText = data.filter(a => new Date(a.fecha).getFullYear() === esteAnio).length;
             
-            const ultimos = [...data].reverse().slice(0, 8);
+            const ultimos = [...data].reverse().slice(0, 10);
             document.getElementById('tablaHistorial').innerHTML = `
-                <table class="table table-sm">
-                    <thead><tr><th>Fecha</th><th>Kg</th><th>$</th><th>Sobras</th><th></th></tr></thead>
+                <table class="table table-historial">
+                    <thead><tr><th>Fecha</th><th>Kg</th><th>$ Total</th><th>Sobras</th><th></th></tr></thead>
                     <tbody>${ultimos.map(a => {
                         const semClase = a.sobras === 'Mucho' ? 'semaforo-mucho' : a.sobras === 'Poco' ? 'semaforo-poco' : 'semaforo-nada';
                         return `<tr>
                             <td>${new Date(a.fecha).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'})}</td>
                             <td>${(parseFloat(a.pesototal)||0).toFixed(1)}</td>
                             <td>$${(parseFloat(a.gastototal)||0).toFixed(0)}</td>
-                            <td><select class="form-select form-select-sm ${semClase}" style="width:85px; font-size: 10px;" onchange="alert('Guardado')">
-                                <option ${a.sobras==='Nada'?'selected':''}>Nada</option>
-                                <option ${a.sobras==='Poco'?'selected':''}>Poco</option>
-                                <option ${a.sobras==='Mucho'?'selected':''}>Mucho</option>
-                            </select></td>
-                            <td><button class="btn btn-sm text-primary p-0" onclick="cargarEdicion(${a.rowindex})"><i class="bi bi-pencil-square"></i></button></td>
+                            <td><span class="${semClase}">${a.sobras || 'Nada'}</span></td>
+                            <td><button type="button" class="btn btn-link p-0 text-primary" onclick="cargarEdicion(${a.rowindex})"><i class="bi bi-pencil-square h4"></i></button></td>
                         </tr>`}).join('')}</tbody>
                 </table>`;
 
-            // Gráfico de torta
+            // Gráfico
             const conteo = {};
             data.forEach(a => { if(a.corte) a.corte.split(", ").forEach(c => conteo[c] = (conteo[c] || 0) + 1); });
             const totalCortes = Object.values(conteo).reduce((a, b) => a + b, 0);
@@ -188,6 +190,7 @@
     function cargarEdicion(idx) {
         const asado = registrosFull.find(a => a.rowindex == idx);
         if(!asado) return;
+        
         document.getElementById('editRowIndex').value = idx;
         document.getElementById('fechaAsado').value = asado.fecha.split('T')[0];
         document.getElementById('adultos').value = asado.adultos;
@@ -196,12 +199,13 @@
         
         listaActual = [];
         const nombres = asado.corte.split(", ");
-        const det = asado.cantidades.split(", ");
-        nombres.forEach((n, i) => {
-            const cantStr = det[i].match(/[\d.]+/)[0];
-            const unidadStr = det[i].includes("Kg") ? "Kg" : "Unid.";
-            listaActual.push({ nombre: n, cantidad: parseFloat(cantStr), unidad: unidadStr, precio: 0 });
+        const cantidadesRaw = asado.cantidades.split(", ");
+        nombres.forEach((nombre, i) => {
+            const cantStr = cantidadesRaw[i].match(/[\d.]+/)[0];
+            const unidadStr = cantidadesRaw[i].includes("Kg") ? "Kg" : "Unid.";
+            listaActual.push({ nombre: nombre.trim(), cantidad: parseFloat(cantStr), unidad: unidadStr, precio: 0 });
         });
+
         renderizar();
         document.getElementById('btnSubmit').innerText = "GUARDAR CAMBIOS";
         document.getElementById('btnCancelEdit').style.display = "block";
