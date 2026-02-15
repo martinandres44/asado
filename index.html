@@ -13,19 +13,21 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    
     <style>
         :root { --main-blue: #003366; --accent-blue: #007bff; }
         body { background-color: #f4f7f6; padding: 20px; font-family: 'Segoe UI', sans-serif; }
-        .card-main { max-width: 850px; margin: auto; border-radius: 15px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+        .card-main { max-width: 850px; margin: auto; border-radius: 15px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); background: white; overflow: hidden; }
         .header-asado { background: var(--main-blue); color: white; padding: 20px; text-align: center; }
-        .nav-link { color: #666; font-weight: bold; padding: 15px; border: none !important; }
+        .nav-tabs { background: #e9ecef; border: none; }
+        .nav-link { color: #666; font-weight: bold; border: none !important; padding: 15px; }
         .nav-link.active { color: var(--main-blue) !important; background: white !important; }
-        .total-box { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; }
+        .total-box { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; margin-top: 15px; }
         .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
-        .semaforo-nada { color: #198754; font-weight: bold; } 
-        .semaforo-poco { color: #ffc107; font-weight: bold; } 
-        .semaforo-mucho { color: #dc3545; font-weight: bold; }
         .counter-badge { background: var(--accent-blue); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .semaforo-nada { color: #198754 !important; font-weight: bold; } 
+        .semaforo-poco { color: #ffc107 !important; font-weight: bold; } 
+        .semaforo-mucho { color: #dc3545 !important; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -38,7 +40,7 @@
 
     <ul class="nav nav-tabs nav-fill" id="asadoTabs">
         <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#carga">NUEVO ASADO</button>
+            <button class="nav-link active" id="carga-tab" data-bs-toggle="tab" data-bs-target="#carga">NUEVO ASADO</button>
         </li>
         <li class="nav-item">
             <button class="nav-link" id="btn-historial" data-bs-toggle="tab" data-bs-target="#historial">HISTORIAL Y SOBRAS</button>
@@ -49,25 +51,41 @@
         <div class="tab-pane fade show active" id="carga">
             <form id="asadoForm">
                 <div class="row mb-3">
-                    <div class="col-12"><label class="form-label fw-bold">Fecha</label><input type="date" id="fechaAsado" class="form-control"></div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Fecha del Asado</label>
+                        <input type="date" id="fechaAsado" class="form-control">
+                    </div>
                 </div>
-                <div class="row mb-3">
-                    <div class="col"><label class="form-label fw-bold">Adultos</label><input type="number" id="adultos" class="form-control" placeholder="Cant." required></div>
-                    <div class="col"><label class="form-label fw-bold">Niños</label><input type="number" id="niños" class="form-control" placeholder="Cant."></div>
+                <div class="row mb-4">
+                    <div class="col">
+                        <label class="form-label fw-bold">Adultos</label>
+                        <input type="number" id="adultos" class="form-control" placeholder="Cant." required>
+                    </div>
+                    <div class="col">
+                        <label class="form-label fw-bold">Niños</label>
+                        <input type="number" id="niños" class="form-control" placeholder="Cant.">
+                    </div>
                 </div>
 
                 <div class="p-3 border rounded-3 bg-light mb-3">
-                    <label class="form-label fw-bold text-primary">Corte y Precio</label>
+                    <label class="form-label fw-bold text-primary">Agregar Corte y Precio</label>
                     <div class="input-group mb-2">
                         <select id="selectCorte" class="form-select" onchange="checkUnidad()">
-                            <option value="">-- Corte --</option>
-                            <option value="Vacío">Vacío</option><option value="Tira de Asado">Tira de Asado</option>
-                            <option value="Entraña">Entraña</option><option value="Matambre">Matambre</option>
-                            <option value="Picaña">Picaña</option><option value="Ojo de Bife">Ojo de Bife</option>
-                            <option value="Chorizo">Chorizo</option><option value="Morcilla">Morcilla</option>
-                            <option value="Provoleta">Provoleta</option><option value="Molleja">Molleja</option>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Vacío">Vacío</option>
+                            <option value="Tira de Asado">Tira de Asado</option>
+                            <option value="Entraña">Entraña</option>
+                            <option value="Matambre">Matambre</option>
+                            <option value="Picaña">Picaña</option>
+                            <option value="Ojo de Bife">Ojo de Bife</option>
+                            <option value="Lomo">Lomo</option>
+                            <option value="Colita de Cuadril">Colita de Cuadril</option>
+                            <option value="Chorizo">Chorizo</option>
+                            <option value="Morcilla">Morcilla</option>
+                            <option value="Molleja">Molleja</option>
+                            <option value="Provoleta">Provoleta</option>
                         </select>
-                        <input type="number" step="0.1" id="inputCant" class="form-control" placeholder="Cant.">
+                        <input type="number" step="0.1" id="inputCant" class="form-control" placeholder="Cant." style="max-width: 90px;">
                         <span id="labelUnidad" class="input-group-text">Kg</span>
                     </div>
                     <div class="input-group">
@@ -79,22 +97,31 @@
 
                 <div id="listaCortesUI"></div>
 
-                <div id="boxTotal" class="total-box mb-3" style="display:none;">
+                <div id="boxTotal" class="total-box mb-4" style="display:none;">
                     <div class="row">
-                        <div class="col"><b>PESO TOTAL:</b> <br><span id="valTotal">0.0 Kg</span></div>
-                        <div class="col"><b>GASTO TOTAL:</b> <br><span id="gastoTotal" class="text-success">$0.0</span></div>
+                        <div class="col">
+                            <span class="text-muted fw-bold">PESO CARNE: </span><br>
+                            <span id="valTotal" class="h5 mb-0 text-primary">0.0 Kg</span>
+                        </div>
+                        <div class="col">
+                            <span class="text-muted fw-bold">GASTO TOTAL: </span><br>
+                            <span id="gastoTotal" class="h5 mb-0 text-success">$0.0</span>
+                        </div>
                     </div>
                 </div>
 
-                <textarea id="notas" class="form-control mb-3" placeholder="Notas..."></textarea>
-                <button type="submit" class="btn btn-primary w-100 btn-lg shadow">REGISTRAR ASADO</button>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Notas</label>
+                    <textarea id="notas" class="form-control" rows="1" placeholder="Notas..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 btn-lg shadow mt-2">REGISTRAR ASADO</button>
             </form>
         </div>
 
         <div class="tab-pane fade" id="historial">
-            <h6 class="fw-bold mb-3">Últimos Asados y Semáforo de Sobras</h6>
+            <h6 class="fw-bold mb-3">Últimos Asados y Gasto</h6>
             <div id="tablaHistorial" class="table-responsive small">Cargando registros...</div>
-            <div class="text-center mt-4" style="max-width: 500px; margin: auto;">
+            <div class="text-center mt-4 border-top pt-4" style="max-width: 500px; margin: auto;">
                 <h6 class="fw-bold mb-3">Preferencia de Cortes (%)</h6>
                 <canvas id="graficoCortes"></canvas>
             </div>
@@ -104,7 +131,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbw6z7SLrURmQqq7ZjxbKAnKIIhaEqhZ3T94DWyISv4CyRt6JYzRiaD4a6T47LMKau0z/exec'; 
+    const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxtVShyFbd9mZqt6gZ5verdu7BFoX7eGrM_VHPuN3xCn0CaSvP12kU_U1gvyJ3jqvgf/exec'; 
     let listaActual = [];
     let miGrafico = null;
 
@@ -112,7 +139,9 @@
 
     function checkUnidad() {
         const c = document.getElementById('selectCorte').value;
-        document.getElementById('labelUnidad').innerText = ["Chorizo", "Morcilla", "Provoleta"].includes(c) ? "Unid." : "Kg";
+        const esU = ["Chorizo", "Morcilla", "Provoleta"].includes(c);
+        document.getElementById('labelUnidad').innerText = esU ? "Unid." : "Kg";
+        document.getElementById('inputPrecio').placeholder = esU ? "Precio por Unidad" : "Precio por Kg";
     }
 
     function sumarCorte() {
@@ -134,6 +163,7 @@
         document.getElementById('boxTotal').style.display = listaActual.length ? 'block' : 'none';
         document.getElementById('valTotal').innerText = kgTotal.toFixed(1) + ' Kg';
         document.getElementById('gastoTotal').innerText = '$' + costoTotal.toFixed(1);
+
         document.getElementById('listaCortesUI').innerHTML = listaActual.map((i, idx) => `
             <div class="corte-item shadow-sm">
                 <span><b>${i.nombre}</b> ($${(i.cantidad * i.precio).toFixed(1)})</span>
@@ -159,18 +189,73 @@
             
             const ultimos = data.reverse().slice(0, 8);
             tabla.innerHTML = `
-                <table class="table table-sm">
-                    <thead class="table-light"><tr><th>Fecha</th><th>Kg</th><th>Adultos</th><th>Sobras</th></tr></thead>
+                <table class="table table-sm mt-2">
+                    <thead class="table-light"><tr><th>Fecha</th><th>Kg</th><th>Adultos</th><th>Precio</th><th>Sobras</th></tr></thead>
                     <tbody>${ultimos.map(a => {
-                        const equiv = (parseFloat(a.adultos) || 0) + ((parseFloat(a.niños) || 0) * 0.5);
+                        // Cálculo de Adultos sin decimal (entero)
+                        const adultosInt = Math.round((parseFloat(a.adultos) || 0) + ((parseFloat(a.niños) || 0) * 0.5));
                         const semClase = a.sobras === 'Mucho' ? 'semaforo-mucho' : a.sobras === 'Poco' ? 'semaforo-poco' : 'semaforo-nada';
+                        const precio = parseFloat(a.gastototal) || 0;
                         return `<tr>
                             <td>${new Date(a.fecha).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'})}</td>
-                            <td>${(parseFloat(a.pesototal) || 0).toFixed(1)}kg</td>
-                            <td>${equiv.toFixed(1)}</td>
+                            <td>${(parseFloat(a.pesototal) || 0).toFixed(1)}</td>
+                            <td>${adultosInt}</td>
+                            <td>$${precio.toFixed(1)}</td>
                             <td>
                                 <select class="form-select form-select-sm ${semClase}" style="width:100px; font-weight:bold;" onchange="alert('Sobras actualizadas')">
                                     <option value="Pendiente" ${!a.sobras || a.sobras === 'Pendiente' ? 'selected' : ''}>?</option>
                                     <option value="Nada" ${a.sobras === 'Nada' ? 'selected' : ''} style="color: #198754;">Nada</option>
                                     <option value="Poco" ${a.sobras === 'Poco' ? 'selected' : ''} style="color: #ffc107;">Poco</option>
-                                    <option value="Mucho" ${
+                                    <option value="Mucho" ${a.sobras === 'Mucho' ? 'selected' : ''} style="color: #dc3545;">Mucho</option>
+                                </select>
+                            </td>
+                        </tr>`;
+                    }).join('')}</tbody>
+                </table>`;
+
+            const conteo = {};
+            data.forEach(a => { if(a.corte) a.corte.split(", ").forEach(c => conteo[c] = (conteo[c] || 0) + 1); });
+            const totalCortes = Object.values(conteo).reduce((a, b) => a + b, 0);
+            if (miGrafico) miGrafico.destroy();
+            miGrafico = new Chart(document.getElementById('graficoCortes'), {
+                type: 'pie',
+                plugins: [ChartDataLabels],
+                data: {
+                    labels: Object.keys(conteo),
+                    datasets: [{ data: Object.values(conteo), backgroundColor: ['#003366', '#FF5733', '#28a745', '#FFC300', '#C70039', '#17a2b8', '#900C3F', '#581845'] }]
+                },
+                options: {
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                        datalabels: { color: '#fff', font: {weight: 'bold'}, formatter: (val) => ((val/totalCortes)*100).toFixed(0) + '%' }
+                    }
+                }
+            });
+        })
+        .catch(err => { tabla.innerHTML = "Error al conectar. Verificá la URL del Script."; });
+    }
+
+    document.getElementById('btn-historial').addEventListener('click', actualizarEstadisticas);
+    window.onload = actualizarEstadisticas;
+
+    document.getElementById('asadoForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            fecha: document.getElementById('fechaAsado').value,
+            adultos: document.getElementById('adultos').value,
+            niños: document.getElementById('niños').value || 0,
+            corte: listaActual.map(i => i.nombre).join(", "),
+            pesoPorCorte: listaActual.map(i => i.cantidad.toFixed(1) + i.unidad).join(", "),
+            pesoTotal: listaActual.reduce((acc, i) => i.unidad === "Kg" ? acc + i.cantidad : acc, 0),
+            gastoTotal: listaActual.reduce((acc, i) => acc + (i.cantidad * i.precio), 0),
+            sobras: "Pendiente",
+            notas: document.getElementById('notas').value
+        };
+        fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }).then(() => {
+            alert('¡Asado registrado con éxito, Martín! 🔥');
+            location.reload();
+        });
+    });
+</script>
+</body>
+</html>
