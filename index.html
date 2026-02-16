@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asados Tracker</title>
+    <title>Asados Tracker v3.2</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,15 +17,15 @@
     
     <style>
         :root { --main-blue: #003366; --accent-blue: #007bff; }
-        body { background-color: #f4f7f6; padding: 20px; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f4f7f6; padding: 15px; font-family: 'Segoe UI', sans-serif; }
         
-        .card-main { max-width: 850px; margin: auto; border-radius: 15px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
-        .header-asado { background: var(--main-blue); color: white; padding: 20px; text-align: center; }
+        .card-main { max-width: 850px; margin: auto; border-radius: 15px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header-asado { background: var(--main-blue); color: white; padding: 20px; text-align: center; border-radius: 15px 15px 0 0; }
         
         /* SEMÁFORO ESTRICTO */
-        .semaforo-nada { color: #198754 !important; font-weight: 800 !important; } /* Verde */
-        .semaforo-poco { color: #ffc107 !important; font-weight: 800 !important; } /* Amarillo */
-        .semaforo-mucho { color: #dc3545 !important; font-weight: 800 !important; } /* ROJO FUERTE */
+        .semaforo-nada { color: #198754 !important; font-weight: 800 !important; } 
+        .semaforo-poco { color: #ffc107 !important; font-weight: 800 !important; } 
+        .semaforo-mucho { color: #dc3545 !important; font-weight: 800 !important; } 
         
         .nav-link { color: #666; font-weight: bold; padding: 15px; border: none !important; }
         .nav-link.active { color: var(--main-blue) !important; background: white !important; }
@@ -34,15 +34,18 @@
         .carbon-box { background: #212529; color: #ffca2c; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 1rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
         
         .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
-        .btn-edit { cursor: pointer; color: var(--main-blue); font-size: 1.3rem; }
-        .btn-edit:hover { color: var(--accent-blue); }
+        .btn-edit { cursor: pointer; color: var(--main-blue); font-size: 1.2rem; }
+        
+        /* AJUSTE TABLA MÓVIL */
+        .table-responsive { overflow-x: auto; }
+        .table-historial th, .table-historial td { white-space: nowrap; vertical-align: middle; padding: 0.5rem 0.2rem; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="card-main">
     <div class="header-asado">
-        <h2 class="mb-0">🔥 Asados Tracker</h2>
+        <h2 class="mb-0">🔥 Asados Tracker <small style="font-size:0.4em; opacity:0.7">v3.2</small></h2>
         <div class="mt-2 text-white-50 small">Asados en 2026: <span id="asadosAnio" class="badge bg-primary">0</span></div>
     </div>
 
@@ -51,22 +54,22 @@
         <li class="nav-item"><button class="nav-link" id="btn-historial" data-bs-toggle="tab" data-bs-target="#historial">HISTORIAL</button></li>
     </ul>
 
-    <div class="tab-content p-4">
+    <div class="tab-content p-3">
         <div class="tab-pane fade show active" id="carga">
             <form id="asadoForm">
                 <input type="hidden" id="editRowIndex">
                 <div class="row mb-3">
-                    <div class="col-12"><label class="form-label fw-bold">Fecha</label><input type="date" id="fechaAsado" class="form-control"></div>
+                    <div class="col-12"><label class="form-label fw-bold small">Fecha</label><input type="date" id="fechaAsado" class="form-control"></div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col"><label class="form-label fw-bold">Adultos</label><input type="number" id="adultos" class="form-control" required></div>
-                    <div class="col"><label class="form-label fw-bold">Niños</label><input type="number" id="niños" class="form-control"></div>
+                    <div class="col"><label class="form-label fw-bold small">Adultos</label><input type="number" id="adultos" class="form-control" required></div>
+                    <div class="col"><label class="form-label fw-bold small">Niños</label><input type="number" id="niños" class="form-control"></div>
                 </div>
 
                 <div class="p-3 border rounded-3 bg-light mb-3">
                     <div class="input-group mb-2">
                         <select id="selectCorte" class="form-select" onchange="checkUnidad()">
-                            <option value="">-- Seleccionar Corte --</option>
+                            <option value="">-- Corte --</option>
                             <option value="Vacío">Vacío</option><option value="Tira de Asado">Tira de Asado</option>
                             <option value="Entraña">Entraña</option><option value="Matambre">Matambre</option>
                             <option value="Picaña">Picaña</option><option value="Ojo de Bife">Ojo de Bife</option>
@@ -77,13 +80,13 @@
                             <option value="Bondiola">Bondiola</option>
                             <option value="Pollo">Pollo</option>
                         </select>
-                        <input type="number" step="0.1" id="inputCant" class="form-control" placeholder="Cant." style="max-width: 90px;">
-                        <span id="labelUnidad" class="input-group-text">Kg</span>
+                        <input type="number" step="0.1" id="inputCant" class="form-control" placeholder="Cant." style="max-width: 80px;">
+                        <span id="labelUnidad" class="input-group-text small">Kg</span>
                     </div>
                     <div class="input-group">
                         <span class="input-group-text">$</span>
                         <input type="number" id="inputPrecio" class="form-control" placeholder="Precio Total">
-                        <button type="button" onclick="sumarCorte()" class="btn btn-success fw-bold">＋ AGREGAR</button>
+                        <button type="button" onclick="sumarCorte()" class="btn btn-success fw-bold">＋</button>
                     </div>
                 </div>
 
@@ -92,10 +95,10 @@
                 <div id="boxTotal" class="total-box mb-3" style="display:none;">
                     <div class="row">
                         <div class="col"><b>PESO TOTAL:</b> <br><span id="valTotal">0.0 Kg</span></div>
-                        <div class="col"><b>GASTO TOTAL:</b> <br><span id="gastoTotal" class="text-success fw-bold">$0.0</span></div>
+                        <div class="col"><b>GASTO:</b> <br><span id="gastoTotal" class="text-success fw-bold">$0.0</span></div>
                     </div>
                     <div class="carbon-box">
-                        <span>🪨 Carbón Sugerido:</span>
+                        <span>🪨 Carbón:</span>
                         <span id="carbonSug" style="font-size: 1.2rem;">0 Kg</span>
                     </div>
                 </div>
@@ -112,7 +115,7 @@
             <div id="tablaHistorial" class="table-responsive">
                 <div class="alert alert-info">Cargando datos...</div>
             </div>
-            <div class="text-center mt-4 pt-4 border-top" style="max-width: 500px; margin: auto;">
+            <div class="text-center mt-4 pt-4 border-top">
                 <h6 class="fw-bold mb-3">Preferencia de Cortes (%)</h6>
                 <canvas id="graficoCortes"></canvas>
             </div>
@@ -122,14 +125,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // TU URL DE APPS SCRIPT
-    const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxtVShyFbd9mZqt6gZ5verdu7BFoX7eGrM_VHPuN3xCn0CaSvP12kU_U1gvyJ3jqvgf/exec'; 
+    // URL PROPORCIONADA POR VOS
+    const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbzqNoT8heYzdFtUbn1LCQbLqsyTMC6ddV6mUojpjjy-DLV-vc8bU2CZhjSCHNDuJWXd/exec'; 
     
     let listaActual = [];
     let registrosFull = [];
     let miGrafico = null;
 
-    // FECHA AUTOMÁTICA HOY
+    // FECHA CORRECTA
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('fechaAsado').value = now.toISOString().slice(0,10);
@@ -146,18 +149,13 @@
         const p = parseFloat(document.getElementById('inputPrecio').value) || 0;
         
         if (n && q > 0) {
-            listaActual.push({ 
-                nombre: n, 
-                cantidad: q, 
-                unidad: document.getElementById('labelUnidad').innerText, 
-                precio: p 
-            });
+            listaActual.push({ nombre: n, cantidad: q, unidad: document.getElementById('labelUnidad').innerText, precio: p });
             renderizar();
             document.getElementById('selectCorte').value = ""; 
             document.getElementById('inputCant').value = ""; 
             document.getElementById('inputPrecio').value = "";
         } else {
-            alert("Por favor elegí un corte y una cantidad válida.");
+            alert("Elegí un corte y cantidad.");
         }
     }
 
@@ -209,13 +207,15 @@
             
             const ultimos = [...data].reverse().slice(0, 10);
             
+            // TABLA CORREGIDA
             tablaDiv.innerHTML = `
-                <table class="table table-hover align-middle" style="font-size: 0.95rem;">
+                <table class="table table-hover table-historial mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Fecha</th>
+                            <th class="text-primary text-center" title="Adultos Equivalentes">Ad.Eq.</th>
                             <th>Kg</th>
-                            <th>$ Total</th>
+                            <th>$</th>
                             <th>Sobras</th>
                             <th></th>
                         </tr>
@@ -223,20 +223,25 @@
                     <tbody>${ultimos.map(a => {
                         const sobrasVal = (a.sobras || "Pendiente").trim();
                         let semClase = 'text-muted';
-                        if(sobrasVal === 'Mucho') { semClase = 'semaforo-mucho'; }
-                        else if(sobrasVal === 'Poco') { semClase = 'semaforo-poco'; }
-                        else if(sobrasVal === 'Nada') { semClase = 'semaforo-nada'; }
+                        if(sobrasVal === 'Mucho') semClase = 'semaforo-mucho';
+                        else if(sobrasVal === 'Poco') semClase = 'semaforo-poco';
+                        else if(sobrasVal === 'Nada') semClase = 'semaforo-nada';
 
                         const fechaFmt = a.fecha ? new Date(a.fecha).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit', timeZone: 'UTC'}) : '-';
                         const pesoFmt = (parseFloat(a.pesototal)||0).toFixed(1);
                         const precioFmt = (parseFloat(a.gastototal)||0).toLocaleString();
+                        
+                        const adultos = parseInt(a.adultos) || 0;
+                        const ninos = parseInt(a.niños) || 0;
+                        const adEq = adultos + (ninos * 0.5);
 
                         return `<tr>
                             <td>${fechaFmt}</td>
+                            <td class="text-primary fw-bold text-center">${adEq}</td>
                             <td>${pesoFmt}</td>
                             <td>$${precioFmt}</td>
                             <td>
-                                <select onchange="actualizarSobrasRapido(${a.rowindex}, this)" class="form-select form-select-sm border-0 ${semClase}" style="width:95px; background:transparent; font-weight:bold; cursor:pointer;">
+                                <select onchange="actualizarSobrasRapido(${a.rowindex}, this)" class="form-select form-select-sm border-0 ${semClase}" style="width:85px; background:transparent; font-weight:bold; cursor:pointer; padding:0;">
                                     <option value="Pendiente" ${sobrasVal==='Pendiente'?'selected':''}>?</option>
                                     <option value="Nada" ${sobrasVal==='Nada'?'selected':''} class="semaforo-nada">Nada</option>
                                     <option value="Poco" ${sobrasVal==='Poco'?'selected':''} class="semaforo-poco">Poco</option>
@@ -274,34 +279,25 @@
                 },
                 options: {
                     plugins: {
-                        legend: { 
-                            position: 'bottom', 
-                            labels: { 
-                                boxWidth: 12, 
-                                font: { size: 14 } // LETRA GRANDE MANTENIDA
-                            } 
-                        },
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 14 } } },
                         datalabels: { color: '#fff', font: {weight: 'bold'}, formatter: (val) => ((val/totalCortes)*100).toFixed(0) + '%' }
                     }
                 }
             });
         })
         .catch(err => {
-            tablaDiv.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
+            tablaDiv.innerHTML = `<div class="alert alert-danger">Error: ${err.message}. Revisar URL.</div>`;
         });
     }
 
     function actualizarSobrasRapido(idx, el) {
         const nuevoValor = el.value;
-        
-        // CAMBIO VISUAL INSTANTÁNEO
-        el.className = "form-select form-select-sm border-0"; // Limpiar clases
+        el.className = "form-select form-select-sm border-0"; 
         if(nuevoValor === 'Mucho') el.classList.add('semaforo-mucho');
         else if(nuevoValor === 'Poco') el.classList.add('semaforo-poco');
         else if(nuevoValor === 'Nada') el.classList.add('semaforo-nada');
         else el.classList.add('text-muted');
 
-        // GUARDAR EN BACKGROUND
         const asado = registrosFull.find(a => a.rowindex == idx);
         if(!asado) return;
 
