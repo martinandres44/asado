@@ -207,13 +207,13 @@
             
             const ultimos = [...data].reverse().slice(0, 10);
             
-            // TABLA CORREGIDA
+            // TABLA CORREGIDA (Ad.Eq. sin color azul)
             tablaDiv.innerHTML = `
                 <table class="table table-hover table-historial mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Fecha</th>
-                            <th class="text-primary text-center" title="Adultos Equivalentes">Ad.Eq.</th>
+                            <th class="text-center" title="Adultos Equivalentes">Ad.Eq.</th>
                             <th>Kg</th>
                             <th>$</th>
                             <th>Sobras</th>
@@ -237,7 +237,7 @@
 
                         return `<tr>
                             <td>${fechaFmt}</td>
-                            <td class="text-primary fw-bold text-center">${adEq}</td>
+                            <td class="text-center">${adEq}</td>
                             <td>${pesoFmt}</td>
                             <td>$${precioFmt}</td>
                             <td>
@@ -389,3 +389,4 @@
 </script>
 </body>
 </html>
+
