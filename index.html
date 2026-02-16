@@ -24,14 +24,12 @@
         .total-box { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; }
         .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
         
-        /* SEMÁFORO CORREGIDO */
+        /* SEMÁFORO */
         .semaforo-nada { color: #198754 !important; font-weight: bold; } 
         .semaforo-poco { color: #ffc107 !important; font-weight: bold; } 
         .semaforo-mucho { color: #dc3545 !important; font-weight: bold; }
         
-        /* TABLA MÁS GRANDE */
         .table-historial { font-size: 1.1rem !important; }
-        .table-historial td, .table-historial th { padding: 12px 8px !important; }
     </style>
 </head>
 <body>
@@ -160,12 +158,17 @@
                             <td>${new Date(a.fecha).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'})}</td>
                             <td>${(parseFloat(a.pesototal)||0).toFixed(1)}</td>
                             <td>$${(parseFloat(a.gastototal)||0).toFixed(0)}</td>
-                            <td><span class="${semClase}">${a.sobras || 'Nada'}</span></td>
+                            <td>
+                                <select class="form-select form-select-sm ${semClase}" style="width:100px; font-weight:bold;">
+                                    <option value="Nada" ${a.sobras==='Nada'?'selected':''} class="semaforo-nada">Nada</option>
+                                    <option value="Poco" ${a.sobras==='Poco'?'selected':''} class="semaforo-poco">Poco</option>
+                                    <option value="Mucho" ${a.sobras==='Mucho'?'selected':''} class="semaforo-mucho">Mucho</option>
+                                </select>
+                            </td>
                             <td><button type="button" class="btn btn-link p-0 text-primary" onclick="cargarEdicion(${a.rowindex})"><i class="bi bi-pencil-square h4"></i></button></td>
                         </tr>`}).join('')}</tbody>
                 </table>`;
 
-            // Gráfico
             const conteo = {};
             data.forEach(a => { if(a.corte) a.corte.split(", ").forEach(c => conteo[c] = (conteo[c] || 0) + 1); });
             const totalCortes = Object.values(conteo).reduce((a, b) => a + b, 0);
@@ -187,23 +190,29 @@
         });
     }
 
-    function cargarEdicion(idx) {
-        const asado = registrosFull.find(a => a.rowindex == idx);
+    function cargarEdicion(rowIndex) {
+        const asado = registrosFull.find(a => a.rowindex == rowIndex);
         if(!asado) return;
         
-        document.getElementById('editRowIndex').value = idx;
+        document.getElementById('editRowIndex').value = rowIndex;
         document.getElementById('fechaAsado').value = asado.fecha.split('T')[0];
         document.getElementById('adultos').value = asado.adultos;
         document.getElementById('niños').value = asado.niños;
         document.getElementById('notas').value = asado.notas || "";
         
         listaActual = [];
-        const nombres = asado.corte.split(", ");
-        const cantidadesRaw = asado.cantidades.split(", ");
-        nombres.forEach((nombre, i) => {
-            const cantStr = cantidadesRaw[i].match(/[\d.]+/)[0];
-            const unidadStr = cantidadesRaw[i].includes("Kg") ? "Kg" : "Unid.";
-            listaActual.push({ nombre: nombre.trim(), cantidad: parseFloat(cantStr), unidad: unidadStr, precio: 0 });
+        const cortesArr = asado.corte.split(", ");
+        const cantidadesArr = asado.cantidades.split(", ");
+        
+        cortesArr.forEach((nombre, i) => {
+            const cantStr = cantidadesArr[i].match(/[\d.]+/)[0];
+            const unidadStr = cantidadesArr[i].includes("Kg") ? "Kg" : "Unid.";
+            listaActual.push({ 
+                nombre: nombre.trim(), 
+                cantidad: parseFloat(cantStr), 
+                unidad: unidadStr, 
+                precio: 0 
+            });
         });
 
         renderizar();
