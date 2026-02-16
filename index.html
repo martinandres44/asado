@@ -207,14 +207,14 @@
             
             const ultimos = [...data].reverse().slice(0, 10);
             
-            // TABLA CORREGIDA (Ad.Eq. sin color azul)
+            // TABLA CON COLUMNA KG/ADTO AGREGADA
             tablaDiv.innerHTML = `
                 <table class="table table-hover table-historial mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Fecha</th>
                             <th class="text-center" title="Adultos Equivalentes">Ad.Eq.</th>
-                            <th>Kg</th>
+                            <th class="text-center" title="Kilos por Adulto Eq.">Kg/Ad</th> <th>Kg</th>
                             <th>$</th>
                             <th>Sobras</th>
                             <th></th>
@@ -228,17 +228,24 @@
                         else if(sobrasVal === 'Nada') semClase = 'semaforo-nada';
 
                         const fechaFmt = a.fecha ? new Date(a.fecha).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit', timeZone: 'UTC'}) : '-';
-                        const pesoFmt = (parseFloat(a.pesototal)||0).toFixed(1);
+                        
+                        // CÁLCULOS
+                        const pesoNum = parseFloat(a.pesototal) || 0;
+                        const pesoFmt = pesoNum.toFixed(1);
                         const precioFmt = (parseFloat(a.gastototal)||0).toLocaleString();
                         
                         const adultos = parseInt(a.adultos) || 0;
                         const ninos = parseInt(a.niños) || 0;
                         const adEq = adultos + (ninos * 0.5);
+                        
+                        // CÁLCULO KG / ADULTO EQ.
+                        let ratio = 0;
+                        if(adEq > 0) ratio = (pesoNum / adEq).toFixed(2); // Ej: 0.75
 
                         return `<tr>
                             <td>${fechaFmt}</td>
                             <td class="text-center">${adEq}</td>
-                            <td>${pesoFmt}</td>
+                            <td class="text-center fw-bold text-secondary">${ratio}</td> <td>${pesoFmt}</td>
                             <td>$${precioFmt}</td>
                             <td>
                                 <select onchange="actualizarSobrasRapido(${a.rowindex}, this)" class="form-select form-select-sm border-0 ${semClase}" style="width:85px; background:transparent; font-weight:bold; cursor:pointer; padding:0;">
@@ -253,7 +260,7 @@
                     }).join('')}</tbody>
                 </table>`;
 
-            // Gráfico
+            // Gráfico (sin cambios)
             const conteo = {};
             data.forEach(a => { 
                 const cortes = (a.corte || "").toString();
@@ -389,4 +396,5 @@
 </script>
 </body>
 </html>
+
 
