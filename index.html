@@ -24,12 +24,14 @@
         .total-box { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; }
         .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
         
-        /* SEMÁFORO */
+        /* SEMÁFORO CORREGIDO */
         .semaforo-nada { color: #198754 !important; font-weight: bold; } 
         .semaforo-poco { color: #ffc107 !important; font-weight: bold; } 
-        .semaforo-mucho { color: #dc3545 !important; font-weight: bold; }
+        .semaforo-mucho { color: #dc3545 !important; font-weight: bold; } /* ROJO */
         
         .table-historial { font-size: 1.1rem !important; }
+        .btn-edit { cursor: pointer; color: var(--accent-blue); transition: 0.2s; }
+        .btn-edit:hover { transform: scale(1.2); }
     </style>
 </head>
 <body>
@@ -160,15 +162,16 @@
                             <td>$${(parseFloat(a.gastototal)||0).toFixed(0)}</td>
                             <td>
                                 <select class="form-select form-select-sm ${semClase}" style="width:100px; font-weight:bold;">
-                                    <option value="Nada" ${a.sobras==='Nada'?'selected':''} class="semaforo-nada">Nada</option>
-                                    <option value="Poco" ${a.sobras==='Poco'?'selected':''} class="semaforo-poco">Poco</option>
-                                    <option value="Mucho" ${a.sobras==='Mucho'?'selected':''} class="semaforo-mucho">Mucho</option>
+                                    <option value="Nada" ${a.sobras==='Nada'?'selected':''}>Nada</option>
+                                    <option value="Poco" ${a.sobras==='Poco'?'selected':''}>Poco</option>
+                                    <option value="Mucho" ${a.sobras==='Mucho'?'selected':''}>Mucho</option>
                                 </select>
                             </td>
-                            <td><button type="button" class="btn btn-link p-0 text-primary" onclick="cargarEdicion(${a.rowindex})"><i class="bi bi-pencil-square h4"></i></button></td>
+                            <td><i class="bi bi-pencil-square btn-edit h4" onclick="cargarEdicion(${a.rowindex})"></i></td>
                         </tr>`}).join('')}</tbody>
                 </table>`;
 
+            // Gráfico con paleta mejorada
             const conteo = {};
             data.forEach(a => { if(a.corte) a.corte.split(", ").forEach(c => conteo[c] = (conteo[c] || 0) + 1); });
             const totalCortes = Object.values(conteo).reduce((a, b) => a + b, 0);
@@ -178,7 +181,10 @@
                 plugins: [ChartDataLabels],
                 data: {
                     labels: Object.keys(conteo),
-                    datasets: [{ data: Object.values(conteo), backgroundColor: ['#003366', '#FF5733', '#28a745', '#FFC300', '#C70039', '#17a2b8'] }]
+                    datasets: [{ 
+                        data: Object.values(conteo), 
+                        backgroundColor: ['#003f5c', '#444e86', '#955196', '#dd5182', '#ff6e54', '#ffa600', '#2eb82e', '#00b3b3'] 
+                    }]
                 },
                 options: {
                     plugins: {
@@ -190,29 +196,33 @@
         });
     }
 
-    function cargarEdicion(rowIndex) {
-        const asado = registrosFull.find(a => a.rowindex == rowIndex);
+    function cargarEdicion(idx) {
+        // Buscamos el registro en el array global
+        const asado = registrosFull.find(a => a.rowindex == idx);
         if(!asado) return;
         
-        document.getElementById('editRowIndex').value = rowIndex;
+        document.getElementById('editRowIndex').value = idx;
         document.getElementById('fechaAsado').value = asado.fecha.split('T')[0];
         document.getElementById('adultos').value = asado.adultos;
         document.getElementById('niños').value = asado.niños;
         document.getElementById('notas').value = asado.notas || "";
         
+        // Reconstrucción de cortes
         listaActual = [];
-        const cortesArr = asado.corte.split(", ");
-        const cantidadesArr = asado.cantidades.split(", ");
+        const nombres = asado.corte ? asado.corte.split(", ") : [];
+        const cantidadesRaw = asado.cantidades ? asado.cantidades.split(", ") : [];
         
-        cortesArr.forEach((nombre, i) => {
-            const cantStr = cantidadesArr[i].match(/[\d.]+/)[0];
-            const unidadStr = cantidadesArr[i].includes("Kg") ? "Kg" : "Unid.";
-            listaActual.push({ 
-                nombre: nombre.trim(), 
-                cantidad: parseFloat(cantStr), 
-                unidad: unidadStr, 
-                precio: 0 
-            });
+        nombres.forEach((nombre, i) => {
+            if (cantidadesRaw[i]) {
+                const cantStr = cantidadesRaw[i].match(/[\d.]+/)[0];
+                const unidadStr = cantidadesRaw[i].includes("Kg") ? "Kg" : "Unid.";
+                listaActual.push({ 
+                    nombre: nombre.trim(), 
+                    cantidad: parseFloat(cantStr), 
+                    unidad: unidadStr, 
+                    precio: 0 
+                });
+            }
         });
 
         renderizar();
