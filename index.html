@@ -20,9 +20,12 @@
         .nav-link.active { color: var(--main-blue) !important; background: white !important; }
         .total-box { background: #f8f9fa; border: 2px dashed var(--main-blue); padding: 15px; border-radius: 10px; text-align: center; }
         .corte-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
+        
+        /* SEMÁFORO CORREGIDO */
         .semaforo-nada { color: #198754 !important; font-weight: bold; } 
         .semaforo-poco { color: #ffc107 !important; font-weight: bold; } 
-        .semaforo-mucho { color: #dc3545 !important; font-weight: bold; } /* ROJO CORREGIDO */
+        .semaforo-mucho { color: #dc3545 !important; font-weight: bold; } /* ROJO SEGURO */
+        
         .table-historial { font-size: 1.1rem !important; }
         .btn-edit { cursor: pointer; color: var(--accent-blue); }
     </style>
@@ -80,6 +83,7 @@
             </form>
         </div>
         <div class="tab-pane fade" id="historial">
+            <h6 class="fw-bold mb-3">Últimos Registros</h6>
             <div id="tablaHistorial" class="table-responsive">Cargando...</div>
             <div class="text-center mt-4 pt-4 border-top" style="max-width: 500px; margin: auto;"><canvas id="graficoCortes"></canvas></div>
         </div>
@@ -134,12 +138,18 @@
                 <table class="table table-historial">
                     <thead><tr><th>Fecha</th><th>Kg</th><th>$ Total</th><th>Sobras</th><th></th></tr></thead>
                     <tbody>${ultimos.map(a => {
-                        const semClase = a.sobras === 'Mucho' ? 'semaforo-mucho' : a.sobras === 'Poco' ? 'semaforo-poco' : 'semaforo-nada';
+                        const semClase = a.sobras === 'Mucho' ? 'semaforo-mucho' : (a.sobras === 'Poco' ? 'semaforo-poco' : 'semaforo-nada');
                         return `<tr>
                             <td>${new Date(a.fecha).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'})}</td>
                             <td>${(parseFloat(a.pesototal)||0).toFixed(1)}</td>
                             <td>$${(parseFloat(a.gastototal)||0).toFixed(0)}</td>
-                            <td><span class="${semClase}">${a.sobras || 'Nada'}</span></td>
+                            <td>
+                                <select class="form-select form-select-sm ${semClase}" style="width:100px; font-weight:bold;">
+                                    <option value="Nada" ${a.sobras==='Nada'?'selected':''}>Nada</option>
+                                    <option value="Poco" ${a.sobras==='Poco'?'selected':''}>Poco</option>
+                                    <option value="Mucho" ${a.sobras==='Mucho'?'selected':''}>Mucho</option>
+                                </select>
+                            </td>
                             <td><i class="bi bi-pencil-square btn-edit h4" onclick="cargarEdicion(${a.rowindex})"></i></td>
                         </tr>`}).join('')}</tbody>
                 </table>`;
@@ -173,6 +183,7 @@
         document.getElementById('adultos').value = asado.adultos;
         document.getElementById('niños').value = asado.niños;
         document.getElementById('notas').value = asado.notas || "";
+        
         listaActual = [];
         const nombres = asado.corte ? asado.corte.split(", ") : [];
         const cantidadesRaw = asado.cantidades ? asado.cantidades.split(", ") : [];
